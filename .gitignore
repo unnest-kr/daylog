@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.secrets/
+.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.playwright-cli/
+test-results/
+*.log

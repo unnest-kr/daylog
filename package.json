@@ -1,0 +1,31 @@
+{
+	"name": "daylog-daily-report",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": ">=22.13.0"
+	},
+	"scripts": {
+		"dev": "vite --host 127.0.0.1",
+		"build": "tsc --noEmit && vite build",
+		"start": "node --env-file-if-exists=.env server/index.mjs",
+		"test": "node --test test/*.test.mjs",
+		"up": "docker compose up -d --build"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "1.32.1",
+		"lucide-react": "1.61.0",
+		"react": "19.3.1",
+		"react-dom": "19.3.1",
+		"react-markdown": "10.1.0",
+		"remark-gfm": "4.0.1"
+	},
+	"devDependencies": {
+		"@types/react": "19.3.0",
+		"@types/react-dom": "^19.0.0",
+		"@vitejs/plugin-react": "5.2.0",
+		"typescript": "5.9.3",
+		"vite": "7.3.7"
+	}
+}

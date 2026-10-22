@@ -1,0 +1,23 @@
+name: daylog-app
+
+services:
+  daylog:
+    build: .
+    image: daylog:local
+    init: true
+    ports:
+      - "127.0.0.1:${DAYLOG_PORT:-3090}:${DAYLOG_PORT:-3090}"
+    environment:
+      HOST: 0.0.0.0
+      PORT: ${DAYLOG_PORT:-3090}
+      DATA_DIR: /data
+      MCP_URL: ${MCP_URL:-}
+      MCP_TOOL: ${MCP_TOOL:-daily_report_assistant}
+      UNNESTFLOW_API_KEY: ${UNNESTFLOW_API_KEY:-}
+      FLOW_URL: ${FLOW_URL:-}
+    volumes:
+      - report-data:/data
+    restart: unless-stopped
+
+volumes:
+  report-data:
