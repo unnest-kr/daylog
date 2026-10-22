@@ -14,9 +14,12 @@ export const koreanToday = () =>
 		new Date(),
 	);
 export const dateLabel = (value: string) =>
-	new Intl.DateTimeFormat("ko-KR", {
-		month: "long",
-		day: "numeric",
+	fullDateLabel(value).replace(/^\d+\./, "");
+export const fullDateLabel = (value: string) => {
+	const [year, month, day] = value.split("-").map(Number);
+	const weekday = new Intl.DateTimeFormat("ko-KR", {
 		weekday: "short",
 		timeZone: "Asia/Seoul",
 	}).format(new Date(`${value}T12:00:00+09:00`));
+	return `${year}.${month}.${day}.(${weekday})`;
+};

@@ -1,21 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-	ArrowUpRight,
-	CalendarDays,
-	Check,
-	ChevronDown,
-	CircleHelp,
-	FileText,
-	Layers2,
-	LoaderCircle,
-	MessageSquare,
-	Plus,
-	Settings2,
-	Sparkles,
-	UploadCloud,
-	X,
-} from "lucide-react";
-import { api, dateLabel, koreanToday } from "./api";
+import { Check, LoaderCircle, Plus, Settings2, X } from "lucide-react";
+import { api, fullDateLabel, koreanToday } from "./api";
 import type {
 	Bootstrap,
 	Connection,
@@ -26,8 +11,9 @@ import type {
 	UploadResult,
 } from "./types";
 import ReportLibrary from "./ReportLibrary";
+import ReportBody from "./ReportBody";
 import ChatPanel from "./ChatPanel";
-import { ReportDialog, SettingsDialog, UploadDialog } from "./Dialogs";
+import { SettingsDialog, UploadDialog } from "./Dialogs";
 
 const emptySettings: Settings = {
 	mcpUrl: "",
@@ -35,6 +21,7 @@ const emptySettings: Settings = {
 	hasApiKey: false,
 	flowUrl: "",
 };
+type Tab = "list" | "body" | "chat";
 export default function App() {
 	const [reports, setReports] = useState<Report[]>([]);
 	const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -54,9 +41,11 @@ export default function App() {
 	const [toast, setToast] = useState("");
 	const [uploadOpen, setUploadOpen] = useState(false);
 	const [settingsOpen, setSettingsOpen] = useState(false);
-	const [preview, setPreview] = useState<Report | null>(null);
-	const [historyOpen, setHistoryOpen] = useState(true);
+	const [bodies, setBodies] = useState<Record<string, string | null>>({});
+	const [focus, setFocus] = useState<{ id: string } | null>(null);
+	const [tab, setTab] = useState<Tab>("list");
 	const controller = useRef<AbortController | null>(null);
+	const requested = useRef(new Set<string>());
 	const departments = [
 		...new Set(reports.map((report) => report.department)),
 	].sort((a, b) => a.localeCompare(b, "ko"));
@@ -105,6 +94,32 @@ export default function App() {
 			return () => clearTimeout(timer);
 		}
 	}, [toast]);
+	// 본문에 표시할 원문은 선택된 보고서만 그때그때 불러온다.
+	useEffect(() => {
+		for (const report of reports) {
+			if (!selected.includes(report.id) || requested.current.has(report.id))
+				continue;
+			requested.current.add(report.id);
+			api<Report>(`/api/reports/${report.id}`)
+				.then((data) =>
+					setBodies((current) => ({
+						...current,
+						[report.id]: data.markdown ?? "",
+					})),
+				)
+				.catch(() =>
+					setBodies((current) => ({ ...current, [report.id]: null })),
+				);
+		}
+	}, [reports, selected]);
+	useEffect(() => {
+		if (!focus) return;
+		document
+			.getElementById(`report-${focus.id}`)
+			?.scrollIntoView({ behavior: "smooth", block: "start" });
+		const timer = setTimeout(() => setFocus(null), 2000);
+		return () => clearTimeout(timer);
+	}, [focus]);
 	function newChat() {
 		if (busy) return;
 		setConversationId(null);
@@ -141,14 +156,13 @@ export default function App() {
 		setUploadOpen(false);
 		setToast(`${data.ids.length}개의 보고서를 올렸습니다.`);
 	}
-	async function previewReport(id: string) {
-		try {
-			setPreview(await api<Report>(`/api/reports/${id}`));
-		} catch (error) {
-			setToast(
-				error instanceof Error ? error.message : "보고서를 열지 못했습니다.",
-			);
+	function showReport(id: string) {
+		if (!selectedReports.some((report) => report.id === id)) {
+			setToast("본문에 없는 보고서입니다. 삭제되었을 수 있습니다.");
+			return;
 		}
+		setTab("body");
+		setFocus({ id });
 	}
 	async function loadConversation(id: string) {
 		if (busy) return;
@@ -208,7 +222,8 @@ export default function App() {
 				method: "DELETE",
 			});
 			setReports(data.reports);
-			setPreview(null);
+			requested.current.delete(id);
+			setBodies(({ [id]: _removed, ...rest }) => rest);
 			changeSelection(selected.filter((item) => item !== id));
 			setToast("보고서를 삭제했습니다.");
 		} catch (error) {
@@ -227,238 +242,137 @@ export default function App() {
 			);
 		}
 	}
+	const countFor = (item: string) =>
+		reports.filter(
+			(report) =>
+				(item === "전체 부서" || report.department === item) &&
+				(!date || report.report_date === date),
+		).length;
 	return (
-		<div className="app-shell">
-			<aside className="sidebar">
-				<a className="brand" href="/" aria-label="Daylog 홈">
-					<span className="brand-mark">
-						d<span />
-					</span>
-					<span>
-						daylog<small>TEAM WORKSPACE</small>
-					</span>
-				</a>
-				<div className="workspace-label">
-					<span className="workspace-avatar">W</span>
-					<span>
-						우리 팀 워크스페이스<small>공용 업무 보고 공간</small>
-					</span>
-					<ChevronDown size={13} />
+		<div className="app">
+			<header className="topbar">
+				<div className="topbar-left">
+					<a className="brand" href="/" aria-label="솔리데이 일일보고 홈">
+						솔리데이 <span>/ 일일보고</span>
+					</a>
+					<span className="topbar-divider" />
+					<h1 className="topbar-title">
+						{department} 일일보고 · {date ? fullDateLabel(date) : "전체 기간"}
+					</h1>
 				</div>
-				<div className="sidebar-section-label">WORKSPACE</div>
-				<button className="nav-item active">
-					<Layers2 size={17} />
-					보고서와 대화
-					<span className="nav-indicator" />
-				</button>
-				<button
-					className="nav-item"
-					onClick={() => setUploadOpen(true)}
-					disabled={busy}
-				>
-					<FileText size={17} />새 보고서 올리기
-					<Plus size={14} />
-				</button>
-				<button
-					className="sidebar-section-label history-toggle"
-					onClick={() => setHistoryOpen(!historyOpen)}
-				>
-					최근 대화
-					<ChevronDown size={12} className={historyOpen ? "" : "collapsed"} />
-				</button>
-				{historyOpen && (
-					<div className="history-list">
-						{!conversations.length && (
-							<p>
-								보고서에 질문하면
-								<br />
-								대화가 여기에 남아요.
-							</p>
-						)}
-						{conversations.map((conversation) => (
-							<button
-								className={conversation.id === conversationId ? "current" : ""}
-								key={conversation.id}
-								onClick={() => void loadConversation(conversation.id)}
-								disabled={busy}
-							>
-								<MessageSquare size={13} />
-								<span>{conversation.title}</span>
-							</button>
-						))}
-					</div>
-				)}
-				<div className="sidebar-bottom">
-					<div className="sidebar-note">
-						<span className="note-spark">
-							<Sparkles size={18} />
-						</span>
-						<strong>
-							기록은 모으고,
-							<br />
-							맥락은 연결하세요.
-						</strong>
-						<p>
-							매일의 업무가 팀의
-							<br />
-							다음 액션이 되도록.
-						</p>
-					</div>
-					<button className="nav-item" onClick={() => setSettingsOpen(true)}>
-						<Settings2 size={16} />
-						연결 설정
-					</button>
-					<span className="powered">
-						CONNECTED WITH <b>Unnestflow</b>
-					</span>
-				</div>
-			</aside>
-			<main className="main-shell">
-				<header className="topbar">
-					<div className="breadcrumb">
-						워크스페이스 <span>/</span>
-						<strong>일일 업무 보고</strong>
-					</div>
-					<div className="topbar-right">
-						<button
-							className={`connection-status ${connection?.connected ? "online" : ""}`}
-							onClick={() => setSettingsOpen(true)}
-						>
-							{connecting ? (
-								<LoaderCircle size={12} className="spin" />
-							) : (
-								<span />
-							)}
-							{connecting
-								? "연결 확인 중"
-								: connection?.connected
-									? "Unnestflow 연결됨"
-									: "연결 확인 필요"}
-						</button>
-						<span className="topbar-divider" />
-						<span className="profile-avatar" title="공용 워크스페이스">
-							W
-						</span>
-					</div>
-				</header>
-				<div className="page-heading">
-					<div>
-						<div className="page-kicker">
-							<span />
-							DAILY WORK, SHARED CONTEXT
-						</div>
-						<h1>
-							일일 업무 보고<span>.</span>
-						</h1>
-						<p>팀의 오늘을 모으고, 더 나은 내일을 함께 준비하세요.</p>
-					</div>
+				<div className="topbar-right">
 					<button
-						className="primary-button upload-main"
+						className={`status-pill ${connecting ? "" : connection?.connected ? "online" : "offline"}`}
+						onClick={() => setSettingsOpen(true)}
+					>
+						{connecting ? (
+							<LoaderCircle size={12} className="spin" />
+						) : (
+							connection?.connected && <Check size={13} strokeWidth={3} />
+						)}
+						{connecting
+							? "연결 확인 중"
+							: connection?.connected
+								? "Unnestflow 연결됨"
+								: "연결 확인 필요"}
+					</button>
+					<button
+						className="header-button primary"
+						aria-label="보고서 올리기"
 						onClick={() => setUploadOpen(true)}
 						disabled={busy}
 					>
-						<Plus size={16} />
-						보고서 올리기
+						<Plus size={15} />
+						<span>보고서 올리기</span>
 					</button>
-				</div>
-				<div className="filter-bar">
-					<div className="department-filters">
-						{["전체 부서", ...departments].map((item) => (
-							<button
-								key={item}
-								className={item === department ? "active" : ""}
-								onClick={() => filter(item, date)}
-								disabled={busy}
-							>
-								{item}
-								<span>
-									{
-										reports.filter(
-											(report) =>
-												(item === "전체 부서" || report.department === item) &&
-												(!date || report.report_date === date),
-										).length
-									}
-								</span>
-							</button>
-						))}
-					</div>
-					<label className="date-filter">
-						<CalendarDays size={14} />
-						<span>{date ? dateLabel(date) : "전체 기간"}</span>
-						<input
-							type="date"
-							aria-label="보고 날짜 필터"
-							value={date}
-							disabled={busy}
-							onChange={(event) => filter(department, event.target.value)}
-						/>
-						{date && (
-							<button
-								aria-label="전체 기간 보기"
-								disabled={busy}
-								onClick={(event) => {
-									event.preventDefault();
-									filter(department, "");
-								}}
-							>
-								<X size={12} />
-							</button>
-						)}
-					</label>
-				</div>
-				{!loaded ? (
-					<div className="app-loading">
-						<LoaderCircle className="spin" size={24} />
-						{error || "워크스페이스를 준비하고 있어요"}
-					</div>
-				) : (
-					<div className="work-area">
-						<ReportLibrary
-							reports={visible}
-							selected={selected}
-							onSelection={changeSelection}
-							onPreview={(id) => void previewReport(id)}
-							onUpload={() => setUploadOpen(true)}
-						/>
-						<ChatPanel
-							reports={selectedReports}
-							messages={messages}
-							connected={Boolean(connection?.connected)}
-							settings={settings}
-							busy={busy}
-							pendingQuestion={pendingQuestion}
-							error={error}
-							draft={draft}
-							onDraft={setDraft}
-							onSend={(question) => void send(question)}
-							onStop={() => controller.current?.abort()}
-							onPreview={(id) => void previewReport(id)}
-							onRemove={(id) =>
-								changeSelection(selected.filter((item) => item !== id))
-							}
-							onNew={newChat}
-							onSettings={() => setSettingsOpen(true)}
-							onUpload={() => setUploadOpen(true)}
-						/>
-					</div>
-				)}
-				<footer className="page-footer">
-					<span>
-						<span className="tiny-dot" />
-						보고서 {reports.length}개 · {departments.length}개 부서 · 선택{" "}
-						{selectedReports.length}개
-					</span>
 					<button
-						onClick={() => void samples()}
-						disabled={busy || reports.some((report) => report.sample)}
+						className="header-button"
+						aria-label="연결 설정"
+						onClick={() => setSettingsOpen(true)}
 					>
-						<CircleHelp size={12} />
-						샘플 보고서로 시작하기
-						<ArrowUpRight size={11} />
+						<Settings2 size={15} />
+						<span>연결 설정</span>
 					</button>
-				</footer>
-			</main>
+				</div>
+			</header>
+			<nav className="pane-tabs" aria-label="화면 전환">
+				{(
+					[
+						["list", "목록", visible.length],
+						["body", "본문", selectedReports.length],
+						["chat", "AI 검토", null],
+					] as const
+				).map(([value, label, count]) => (
+					<button
+						key={value}
+						className={tab === value ? "active" : ""}
+						aria-pressed={tab === value}
+						onClick={() => setTab(value)}
+					>
+						{label}
+						{count !== null && <span>{count}</span>}
+					</button>
+				))}
+			</nav>
+			{!loaded ? (
+				<div className="app-loading">
+					<LoaderCircle className="spin" size={24} />
+					{error || "워크스페이스를 준비하고 있어요"}
+				</div>
+			) : (
+				<div className={`workspace show-${tab}`}>
+					<ReportLibrary
+						reports={visible}
+						total={reports.length}
+						departments={["전체 부서", ...departments].map((name) => ({
+							name,
+							count: countFor(name),
+						}))}
+						department={department}
+						date={date}
+						busy={busy}
+						selected={selected}
+						onFilter={filter}
+						onSelection={changeSelection}
+						onShow={showReport}
+						onUpload={() => setUploadOpen(true)}
+						onSamples={() => void samples()}
+					/>
+					<ReportBody
+						reports={selectedReports}
+						bodies={bodies}
+						highlighted={focus?.id ?? null}
+						total={reports.length}
+						busy={busy}
+						onDelete={(id) => void removeReport(id)}
+						onUpload={() => setUploadOpen(true)}
+						onSamples={() => void samples()}
+					/>
+					<ChatPanel
+						reports={selectedReports}
+						messages={messages}
+						conversations={conversations}
+						conversationId={conversationId}
+						connected={Boolean(connection?.connected)}
+						settings={settings}
+						busy={busy}
+						pendingQuestion={pendingQuestion}
+						error={error}
+						draft={draft}
+						onDraft={setDraft}
+						onSend={(question) => void send(question)}
+						onStop={() => controller.current?.abort()}
+						onShowReport={showReport}
+						onRemove={(id) =>
+							changeSelection(selected.filter((item) => item !== id))
+						}
+						onNew={newChat}
+						onLoadConversation={(id) => void loadConversation(id)}
+						onSettings={() => setSettingsOpen(true)}
+						onUpload={() => setUploadOpen(true)}
+					/>
+				</div>
+			)}
 			{uploadOpen && (
 				<UploadDialog
 					departments={departments}
@@ -476,13 +390,6 @@ export default function App() {
 						if (result.connected)
 							setToast("Unnestflow MCP 연결을 확인했습니다.");
 					}}
-				/>
-			)}
-			{preview && (
-				<ReportDialog
-					report={preview}
-					onClose={() => setPreview(null)}
-					onDelete={(id) => void removeReport(id)}
 				/>
 			)}
 			{toast && (

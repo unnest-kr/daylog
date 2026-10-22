@@ -6,13 +6,12 @@ import {
 	FileText,
 	Link2,
 	LoaderCircle,
-	Trash2,
 	UploadCloud,
 	X,
 } from "lucide-react";
 import { api, koreanToday } from "./api";
 import Markdown from "./Markdown";
-import type { Connection, Report, Settings, UploadResult } from "./types";
+import type { Connection, Settings, UploadResult } from "./types";
 
 export function Modal({
 	children,
@@ -457,49 +456,4 @@ export function SettingsDialog({
 		</Modal>
 	);
 }
-
-export function ReportDialog({
-	report,
-	onClose,
-	onDelete,
-}: {
-	report: Report;
-	onClose: () => void;
-	onDelete: (id: string) => void;
-}) {
-	return (
-		<Modal onClose={onClose} className="report-modal">
-			<div className="preview-meta">
-				<span className="department-badge">{report.department}</span>
-				<span>{report.report_date}</span>
-				{Boolean(report.sample) && <span className="sample-badge">샘플</span>}
-			</div>
-			<h2>{report.title}</h2>
-			<p className="modal-description">
-				{report.filename} · {report.markdown?.length.toLocaleString()}자
-			</p>
-			<div className="report-preview">
-				<Markdown>{report.markdown ?? ""}</Markdown>
-			</div>
-			<div className="modal-footer">
-				<button
-					className="danger-button"
-					onClick={() => {
-						if (
-							window.confirm(
-								`“${report.title}” 보고서를 삭제할까요? 기존 대화의 원문을 다시 열 수 없게 됩니다.`,
-							)
-						)
-							onDelete(report.id);
-					}}
-				>
-					<Trash2 size={14} />
-					보고서 삭제
-				</button>
-				<button className="secondary-button" onClick={onClose}>
-					닫기
-				</button>
-			</div>
-		</Modal>
-	);
-}
+
