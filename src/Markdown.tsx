@@ -9,6 +9,29 @@ type MdNode = {
 };
 const referencePattern = /\[(R\d+(?:\s*,\s*R\d+)*)\]/g;
 
+// Some Flow responses insert blank lines between table rows. Keep fenced code intact.
+function reviewMarkdown(value: string) {
+	const lines = value.split("\n");
+	const result: string[] = [];
+	let fence: { character: string; length: number } | null = null;
+	const tableRow = (line: string) => /^\s*\|.*\|\s*$/.test(line);
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+		if (marker) {
+			if (!fence) fence = { character: marker[1][0], length: marker[1].length };
+			else if (new RegExp(`^ {0,3}${fence.character}{${fence.length},}\\s*$`).test(line)) fence = null;
+		}
+		if (!fence && !line.trim() && tableRow(result.at(-1) ?? "")) {
+			let next = i + 1;
+			while (next < lines.length && !lines[next].trim()) next++;
+			if (tableRow(lines[next] ?? "")) continue;
+		}
+		result.push(line);
+	}
+	return result.join("\n");
+}
+
 // 답변의 [R1], [R1, R2] 표기 중 실제 근거에 있는 것만 링크로 바꾼다.
 function remarkReferences(references: string[]) {
 	function split(value: string): MdNode[] {
@@ -89,7 +112,7 @@ export default function Markdown({
 					),
 				}}
 			>
-				{children}
+				{references?.length ? reviewMarkdown(children) : children}
 			</ReactMarkdown>
 		</div>
 	);

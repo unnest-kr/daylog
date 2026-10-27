@@ -1,6 +1,7 @@
 import {
 	ArrowRight,
 	ChevronDown,
+	ClipboardCheck,
 	FileText,
 	MessageSquare,
 	Square,
@@ -23,6 +24,7 @@ interface Props {
 	draft: string;
 	onDraft: (text: string) => void;
 	onSend: (text: string) => void;
+	onReview: () => void;
 	onStop: () => void;
 	onShowReport: (id: string) => void;
 	onRemove: (id: string) => void;
@@ -93,7 +95,7 @@ export default function ChatPanel(props: Props) {
 						<strong>AI 검토</strong>
 						<span>
 							선택한 보고서 {reports.length}개 ·{" "}
-							{settings.toolName || "Unnestflow MCP"}
+							{settings.toolName || "Unnestflow"}
 						</span>
 					</div>
 				</div>
@@ -198,14 +200,18 @@ export default function ChatPanel(props: Props) {
 							) : (
 								<>
 									<p>
-										선택한 보고서 {reports.length}개를 함께 볼게요. 무엇을
-										정리해 드릴까요?
+										선택한 보고서 {reports.length}개를 검토하면 사업별 현황과
+										수정 제안, 우선 조치를 근거와 함께 정리해 드려요.
 									</p>
 									<div className="chip-row">
-										{suggestions.map(({ title, question }, index) => (
+										<button className="chip primary" disabled={!canSend} onClick={props.onReview}>
+											<ClipboardCheck size={14} />
+											검토하기
+										</button>
+										{suggestions.map(({ title, question }) => (
 											<button
 												key={title}
-												className={`chip ${index === 0 ? "primary" : ""}`}
+												className="chip"
 												disabled={!canSend}
 												onClick={() => props.onSend(question)}
 											>

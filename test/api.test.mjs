@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { once } from "node:events";
@@ -51,6 +51,17 @@ async function start(t, options = {}) {
 	return { ...app, base, request, calls };
 }
 
+test("built UI is served on Windows and sibling files remain private", async (t) => {
+	const root = mkdtempSync(join(tmpdir(), "daylog-static-"));
+	t.after(() => rmSync(root, { recursive: true, force: true }));
+	writeFileSync(join(root, "index.html"), "<h1>Daylog</h1>");
+	const app = await start(t, { dist: root });
+	const response = await fetch(app.base + "/");
+	assert.equal(response.status, 200);
+	assert.equal(await response.text(), "<h1>Daylog</h1>");
+	assert.equal((await fetch(app.base + "/%2e%2e%5cprivate.txt")).status, 404);
+});
+
 test("standalone startup stores reports without requiring an MCP server", async (t) => {
 	const app = await start(t, { env: {} });
 	const health = await app.request("/api/health");
@@ -78,7 +89,6 @@ test("standalone startup stores reports without requiring an MCP server", async 
 
 test("report content and metadata survive a database reopen", async (t) => {
 	const folder = mkdtempSync(join(tmpdir(), "daylog-persist-"));
-	t.after(() => rmSync(folder, { recursive: true, force: true }));
 	const database = join(folder, "reports.sqlite");
 	const first = await start(t, { database });
 	const uploaded = await first.request("/api/reports", {
@@ -86,6 +96,8 @@ test("report content and metadata survive a database reopen", async (t) => {
 	});
 	assert.equal(uploaded.status, 201);
 	const second = await start(t, { database });
+	// Close both SQLite handles before removing their directory on Windows.
+	t.after(() => rmSync(folder, { recursive: true, force: true }));
 	const fetched = await second.request(`/api/reports/${uploaded.data.ids[0]}`);
 	assert.equal(fetched.data.markdown, report().markdown);
 	assert.equal(fetched.data.department, "개발팀");

@@ -1,6 +1,6 @@
 # Daylog
 
-부서별 Markdown 업무 보고서를 모으고, 선택한 자료에 대해 질문하는 웹 애플리케이션입니다. React 화면과 Node.js API 서버를 **하나의 컨테이너**로 빌드합니다. 보고서와 대화는 SQLite에 저장하고, 답변은 외부 Unnestflow의 Flow를 MCP로 호출해 생성합니다.
+부서별 Markdown 업무 보고서를 모으고, 선택한 자료에 대해 질문하는 웹 애플리케이션입니다. React 화면과 Node.js API 서버를 **하나의 컨테이너**로 빌드합니다. 보고서와 대화는 SQLite에 저장하고, 답변은 외부 Unnestflow의 Flow 실행 API 또는 MCP를 호출해 생성합니다.
 
 ![보고서 목록·본문·AI 검토 3단 화면 예시 (답변은 화면 설명용 예시 문구)](docs/screenshots/sample-conversation.png)
 
@@ -63,7 +63,39 @@ docker compose up -d
 
 화면에서 저장한 MCP 주소·도구 이름은 DB에 보관하며 환경변수보다 우선합니다. 기존 설치의 `.env` 주소를 변경했는데 반영되지 않으면 연결 설정 화면에서도 주소를 변경합니다. API 키 변경은 컨테이너를 재생성해야 반영됩니다.
 
-연동 서버는 MCP 도구 목록 조회뿐 아니라 실제 Flow 실행도 지원해야 합니다. 일부 Unnestflow MCP 핸들러에서 `'Flow' object has no attribute 'execution_context'` 오류가 발생하는 것을 확인했습니다. 이 오류가 나면 실행용 Flow 조회와 권한 검사가 수정된 Unnestflow 서버가 필요합니다. Daylog는 해당 서버 소스나 패치를 포함하지 않으며, 실제 MCP 연동 검증은 이 문제가 수정된 서버에서 수행했습니다.
+Runtime 모드에서 MCP 편집 기능이 제한된 Unnestflow에는 게시된 Flow의 실행 주소를 **연결 설정**에 입력합니다. `MCP_URL`에 `http://127.0.0.1:7860/api/v1/run/FLOW_UUID`를 설정해도 됩니다. 기존 환경변수 이름은 그대로 사용하며 `/api/v1/run/UUID` 주소를 자동으로 구분합니다. 연결 확인은 같은 서버의 `/api/v1/flows/published`에서 해당 계정이 실행할 수 있는 Flow인지 조회합니다. 실제 호출은 `input_request`에 `input_value`, `input_type: "chat"`, `output_type: "chat"`, `session_id`를 담아 전송하고 Chat Output의 텍스트를 사용합니다. 이 방식에서는 별도의 MCP 도구 노출이 필요하지 않습니다. API 키는 `UNNESTFLOW_API_KEY`에 설정하고, Node로 직접 실행 중이면 Daylog API 서버를 재시작해야 반영됩니다.
+
+로컬 HTTPS Flow API에서 자체 인증서를 사용하면 `UNNESTFLOW_CA_CERT_FILE`에 신뢰할 공개 인증서 또는 CA의 PEM 파일 경로를 설정합니다. 서버 인증서와 호스트 이름 검증은 유지됩니다. 이 파일 경로와 API 키는 브라우저에 반환하지 않습니다.
+
+연동 서버는 MCP 도구 목록 조회뿐 아니라 실제 Flow 실행도 지원해야 합니다. 일부 Unnestflow MCP 핸들러에서 `'Flow' object has no attribute 'execution_context'` 오류가 발생하는 것을 확인했습니다. 현재 로컬 검증에서는 해당 서버를 수정하지 않았으며, Daylog의 실제 검토 실행은 게시된 Flow API 경로로 확인했습니다. 이 MCP 도구 실행 오류는 별도 해결과 재검증이 필요합니다.
+
+### Notion MCP 연계 검증
+
+2026-10-26 로컬 Unnestflow에서 `Chat Input → Agent → Chat Output`과 `MCP Tools → Agent Tools`를 연결한 별도 비공개 Flow의 실제 실행을 확인했습니다. Notion OAuth 승인 후, Agent의 `notion-fetch` 호출과 원문에 있는 보고 페이지·DB·아카이브 링크가 응답에 포함되는 것을 검증했습니다. 한 번의 종합 조회는 약 18.5초였으며 성능 보장 수치는 아닙니다.
+
+이 경로는 **Unnestflow가 외부 Notion MCP를 호출**하는 연결입니다. 위에서 설명한 **Daylog가 Unnestflow 자체 MCP 도구를 호출**하는 경로와 구분합니다. Notion 공식 원격 MCP 주소는 `https://mcp.notion.com/mcp`이며 OAuth 인증은 `mcp-remote` 브리지에서 처리합니다. 조회 어댑터는 지정한 보고 영역의 `notion-fetch` 하나만 노출합니다.
+
+현재 설정·브리지·OAuth 캐시는 이 PC의 Git 제외 경로인 `.data/`에 있습니다. 다른 PC나 컨테이너에 배포하려면 실행 경로와 인증 보관을 따로 구성해야 합니다. 이 연결은 Notion 문서를 Daylog SQLite로 자동 가져오는 동기화 기능을 추가하지 않습니다. 내부 공유용 실행 증빙은 `output/notion-integration/verification.json`에서 확인할 수 있습니다.
+
+### Notion 주간보고 작성 시연
+
+2026-10-26에는 **문서 업로드 → Unnestflow 검토 → Notion 주간보고 저장 및 재조회**도 실제 실행했습니다. 상단 **Notion 주간보고**를 누르면 선택 문서로 부서별 활동, 사업별 진행 수치와 분모, 위험 및 다음 조치를 정리해 지정한 페이지에 게시합니다. 최근 대화를 열고 **이 검토 결과 게시**를 누르면 저장된 답변을 게시하거나 다시 확인할 수 있습니다.
+
+- 게시 대상은 사용자가 수정을 승인한 [주차별 보고 자료 (1)](https://app.notion.com/p/4054587c9925805da1bfeb84deae06ab) 하나입니다. 기존 팀별 페이지와 DB 링크 7개를 유지했습니다.
+- 기존 검토 Flow와 별도의 비공개 게시 Flow를 사용합니다. 서버 전용 `NOTION_WEEKLY_FLOW_URL`과 기존 API 키 및 CA 설정이 필요합니다.
+- Agent에는 `publish_weekly_report(job_id)`만 노출합니다. 본문과 대상은 서버가 저장한 작업으로 고정하며, Notion 저장본의 작업 표시와 원문 ID를 확인한 뒤에만 성공을 반환합니다.
+- 같은 검토 결과는 중복 추가하지 않습니다. 같은 대화의 수정본은 이 연결이 만든 해당 보고 영역만 갱신합니다. 다른 대화는 별도 보고 영역으로 추가됩니다.
+- AI 초안은 원문 대조가 필요합니다. 이번에도 분모 오기와 근거 없는 표현을 교정했습니다. 실행 버튼은 사람의 업무 승인을 의미하지 않습니다.
+
+입력은 `examples/weekly-notion-demo/`의 가상 문서 4개입니다. 결과는 `output/weekly-notion/verification.json`, `output/weekly-notion/weekly-report.md`에 보관했습니다. Daylog·Unnestflow 화면과 MCP 조회 결과는 `output/weekly-notion/evidence/`, 실제 로그인된 Notion 웹 화면 12장과 촬영 기록은 `output/weekly-notion/notion-web/`에 있습니다. 자세한 인계는 [WEEKLY_NOTION_HANDOFF.md](./WEEKLY_NOTION_HANDOFF.md)를 참고하세요.
+
+현재는 **이 PC용 시연**으로, 서버와 MCP 커넥터가 `.data/weekly-jobs/`를 함께 사용하고 커넥터 및 OAuth 캐시도 Daylog 폴더에 의존합니다. Flow 주소만 설정한다고 다른 PC나 컨테이너에서 바로 동작하지는 않습니다. 플랫폼 내 OAuth 관리, 사람의 승인 단계, 예약 실행과 자동 동기화는 구현하지 않았습니다.
+
+### 공유용 소스와 다른 환경으로 이전
+
+Git 공유용 어댑터 소스와 설정 예제는 [connectors/](./connectors/README.md), 세 Flow의 생성 템플릿은 [flows/](./flows/README.md)에 있습니다. 공유용 어댑터는 `NOTION_MCP_CONFIG`, `WEEKLY_JOBS_DIR`, `WEEKLY_EVIDENCE_DIR`로 개인 설정과 런타임 저장 경로를 지정할 수 있습니다. 기존 `.data/` 실행본은 자동으로 교체하지 않습니다.
+
+Unnestflow 쪽에 전달할 배포·설정 요청은 [UNNESTFLOW_PLATFORM_MESSAGE.md](./UNNESTFLOW_PLATFORM_MESSAGE.md), 당시 Flow ID·프롬프트·실행 증빙을 포함한 전체 기록은 [상세 인계](./UNNESTFLOW_DAYLOG_NOTION_HANDOFF.md)에 있습니다. Flow JSON만 가져와서는 커넥터 설치, OAuth 인증, 작업 저장소 공유와 publication 설정이 준비되지 않습니다. 기본 Daylog Docker 이미지에는 커넥터를 포함하지 않으며 Unnestflow 측 실행 환경에 따로 배포합니다.
 
 ### 컨테이너에서 연결 가능한 주소
 

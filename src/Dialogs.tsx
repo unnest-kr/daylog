@@ -363,20 +363,20 @@ export function SettingsDialog({
 			</span>
 			<h2>Unnestflow 연결</h2>
 			<p className="modal-description">
-				Unnestflow가 MCP 서버로 Flow를 제공하고,
+				Unnestflow의 Flow 실행 API 또는 MCP에 연결해,
 				<br />
 				Daylog 서버가 선택한 보고서와 질문을 전달합니다.
 			</p>
 			<label className="field">
-				MCP 서버 주소
+				Unnestflow 연결 주소
 				<input
 					value={url}
 					onChange={(event) => setUrl(event.target.value)}
-					placeholder="http://127.0.0.1:7890/api/v1/mcp/project/…/streamable"
+					placeholder="http://127.0.0.1:7860/api/v1/run/Flow-ID"
 				/>
 			</label>
 			<label className="field">
-				Flow 도구 이름
+				Flow 이름 / MCP 도구 이름
 				{connection?.tools.length ? (
 					<select
 						value={tool}

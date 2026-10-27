@@ -16,3 +16,9 @@ docs
 examples
 test
 README.md
+tmp
+output
+explain-process
+connectors
+flows
+*.md

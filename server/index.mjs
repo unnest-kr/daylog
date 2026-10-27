@@ -1,14 +1,18 @@
 import { createServer } from "node:http";
 import { readFileSync, existsSync, statSync } from "node:fs";
-import { resolve, extname, join } from "node:path";
+import { resolve, extname, join, relative, isAbsolute, sep } from "node:path";
 import { randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createStore } from "./store.mjs";
-import { withMcp, listTools, callFlow } from "./mcp.mjs";
+import { withMcp, listTools, callFlow as callMcpFlow } from "./mcp.mjs";
+import { flowApiId, checkFlowApi, callFlowApi } from "./flow-api.mjs";
 import { buildContext, MAX_CONTEXT_BYTES } from "./context.mjs";
 import { sampleReports } from "./samples.mjs";
+import { createWeeklyPublisher } from "./weekly.mjs";
 
 const fail = (status, message) => Object.assign(new Error(message), { status });
+const callFlow = (settings, ...args) =>
+	flowApiId(settings.mcpUrl) ? callFlowApi(settings, ...args) : callMcpFlow(settings, ...args);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const today = () =>
 	new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(
@@ -104,10 +108,11 @@ export function createApp({
 		toolName:
 			store.getSetting("toolName") ?? env.MCP_TOOL ?? "daily_report_assistant",
 		apiKey: env.UNNESTFLOW_API_KEY ?? "",
+		caCertFile: env.UNNESTFLOW_CA_CERT_FILE ?? "",
 		flowUrl: env.FLOW_URL ?? "",
 	});
 	const publicSettings = () => {
-		const { apiKey, ...rest } = settings();
+		const { apiKey, caCertFile, ...rest } = settings();
 		return { ...rest, hasApiKey: Boolean(apiKey) };
 	};
 	const bootstrap = () => ({
@@ -115,6 +120,7 @@ export function createApp({
 		conversations: store.listConversations(),
 		settings: publicSettings(),
 	});
+	const publishWeekly = createWeeklyPublisher({ env, invokeFlow, getSettings: settings });
 
 	const server = createServer(async (req, res) => {
 		res.setHeader("x-content-type-options", "nosniff");
@@ -148,8 +154,10 @@ export function createApp({
 				return send(res, 200, bootstrap());
 			if (path === "/api/status" && method === "GET") {
 				if (!settings().mcpUrl)
-					throw fail(503, "Unnestflow MCP 연결을 먼저 설정해 주세요.");
+					throw fail(503, "Unnestflow 연결을 먼저 설정해 주세요.");
 				try {
+					if (flowApiId(settings().mcpUrl))
+						return send(res, 200, await checkFlowApi(settings()));
 					const result = await withMcp(settings(), async (client) => ({
 						tools: (await listTools(client)).map(
 							({ name, description, inputSchema }) => ({
@@ -169,7 +177,7 @@ export function createApp({
 				} catch {
 					throw fail(
 						502,
-						"MCP 연결을 확인해 주세요. 서버 주소, API 키, 프로젝트의 Flow 공개 설정을 확인할 수 있습니다.",
+						"Unnestflow 연결을 확인해 주세요. 연결 주소, API 키, Flow 게시 상태와 실행 권한을 확인할 수 있습니다.",
 					);
 				}
 			}
@@ -179,7 +187,7 @@ export function createApp({
 				try {
 					url = new URL(body.mcpUrl);
 				} catch {
-					throw fail(400, "올바른 MCP URL을 입력해 주세요.");
+					throw fail(400, "올바른 Unnestflow 연결 주소를 입력해 주세요.");
 				}
 				if (
 					!["http:", "https:"].includes(url.protocol) ||
@@ -190,7 +198,7 @@ export function createApp({
 				)
 					throw fail(
 						400,
-						"인증 정보나 query가 없는 HTTP(S) MCP URL을 입력해 주세요.",
+						"인증 정보나 query가 없는 HTTP(S) 연결 주소를 입력해 주세요.",
 					);
 				store.setSettings({
 					mcpUrl: url.href,
@@ -236,6 +244,15 @@ export function createApp({
 				const conversation = store.getConversation(conversationMatch[1]);
 				if (!conversation) throw fail(404, "대화를 찾을 수 없습니다.");
 				return send(res, 200, conversation);
+			}
+			if (path === "/api/notion/weekly" && method === "POST") {
+				const body = await readJson(req);
+				if (typeof body.conversationId !== "string" || !uuid.test(body.conversationId))
+					throw fail(400, "게시할 검토 대화를 선택해 주세요.");
+				const conversation = store.getConversation(body.conversationId);
+				if (!conversation) throw fail(404, "검토 대화를 찾을 수 없습니다.");
+				try { return send(res, 200, await publishWeekly(conversation)); }
+				catch (error) { throw fail(error.status ?? 502, error.status ? error.message : "Notion 게시를 확인하지 못했습니다. 검토 결과는 최근 대화에 보관되어 있습니다. 같은 대화를 다시 게시하면 중복 여부를 확인합니다."); }
 			}
 			if (path === "/api/chat" && method === "POST") {
 				const body = await readJson(req);
@@ -332,8 +349,9 @@ export function createApp({
 				dist,
 				`.${path === "/" ? "/index.html" : decodeURIComponent(path)}`,
 			);
+			const localPath = relative(dist, file);
 			if (
-				!file.startsWith(`${dist}/`) ||
+				localPath === ".." || localPath.startsWith(`..${sep}`) || isAbsolute(localPath) ||
 				!existsSync(file) ||
 				!statSync(file).isFile()
 			)

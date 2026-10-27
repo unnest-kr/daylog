@@ -1,0 +1,62 @@
+{
+  "capturedAt": "2026-10-26T06:52:10.944Z",
+  "scope": "same-host separate services; no remote internet access claim",
+  "uiOrigin": "http://127.0.0.1:3090",
+  "reportCount": 25,
+  "selectedReportCount": 20,
+  "businessCaseCount": 5,
+  "flowApi": {
+    "passed": true,
+    "baselineElapsedMs": 17609,
+    "uiResponseStatus": 200,
+    "sourceCount": 20,
+    "savedConversationId": "f15d2890-36f0-479d-8e1f-d1fde8b544c5",
+    "displayedConversationId": "a5f7b76e-cd4f-4f02-96b0-0d7a98b31957"
+  },
+  "nativeMcp": {
+    "initialize": 200,
+    "notifications/initialized": 202,
+    "tools/list": 200,
+    "tools/call": 200,
+    "modelExecutionPassed": false,
+    "error": "'Flow' object has no attribute 'execution_context'"
+  },
+  "platformModifiedForMcpFix": false,
+  "platformRestartedForMcpFix": false,
+  "testsPassed": 18,
+  "pdf": {
+    "filename": "Daylog_Unnestflow_Integration_Evidence.pdf",
+    "pageCount": 15,
+    "sha256": "41244d9644b908120769430ecfa505ac16fc604d79585bc9d87ff7d1f0faaf7e",
+    "format": "explain-process; visual redesign with system connection view, teal step numbers, navy tables and enlarged actual screenshot viewports"
+  },
+  "screenshots": [
+    {
+      "filename": "01-daylog-workspace.png",
+      "sha256": "9eb466beb1a22700df82db981cf201a853862f62095a221ac2a055cd12871aaf"
+    },
+    {
+      "filename": "02-review-running.png",
+      "sha256": "507e4ff74e0d3a40e1f2d929c67daa2be99f10a81348cd483ca1160fa393182c"
+    },
+    {
+      "filename": "03-business-review-results.png",
+      "sha256": "936fea071ededc072536c142991a8f3c67c56d1e0e04919233e44c10a56f88d2"
+    },
+    {
+      "filename": "04-source-reference.png",
+      "sha256": "d7f517d4e588ad21ead153631dfaab928a8986a3afa8789339ed5c638f0821f5"
+    },
+    {
+      "filename": "05-mcp-protocol-evidence.png",
+      "sha256": "50dda9a6c74653521e4ec9d94f8500fba46a34a793f59430551139b7aaccc96e"
+    }
+  ],
+  "historicalPdf": {
+    "filename": "Daylog_Unnestflow_Integration_Evidence.pdf",
+    "pageCount": 6,
+    "sha256": "78d7103ec3480f1bf3deffd54059694dad7b9b53ca165e1fb1375ff12e2ffcfe",
+    "format": "company internal report using retained Design Report template"
+  },
+  "latestVerification": "output/weekly-notion/verification.json"
+}

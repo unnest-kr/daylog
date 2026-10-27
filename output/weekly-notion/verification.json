@@ -1,0 +1,108 @@
+{
+  "timestamp": "2026-10-26T08:26:59.829Z",
+  "pageUrl": "https://app.notion.com/p/4054587c9925805da1bfeb84deae06ab",
+  "conversationId": "c0b258d6-80b1-4710-97c6-2a57b92e5ca6",
+  "jobId": "d8fcdbe031081cf55c8275f75d0997a83062281749fb48386f23794e7f4341da",
+  "reviewHttpStatus": 200,
+  "publishHttpStatus": 200,
+  "platformReplayHttpStatus": 200,
+  "platformReplayElapsedMs": 6459,
+  "initialReviewElapsedMs": 10541,
+  "initialTotalElapsedMs": 20124,
+  "sourceCount": 4,
+  "departments": [
+    "대표이사",
+    "인사팀",
+    "사업팀",
+    "개발팀"
+  ],
+  "businesses": [
+    "Daylog",
+    "리테일봇",
+    "캠페인핏"
+  ],
+  "sourceCrossCheckBy": "Codex",
+  "humanApprovalPerformed": false,
+  "knownDraftIssuesCorrected": true,
+  "publication": {
+    "verified": true,
+    "jobId": "d8fcdbe031081cf55c8275f75d0997a83062281749fb48386f23794e7f4341da",
+    "pageId": "4054587c9925805da1bfeb84deae06ab",
+    "pageUrl": "https://app.notion.com/p/4054587c9925805da1bfeb84deae06ab",
+    "contentSha256": "d6246c8d4411c564e574d905557ee532efb52e7990b79408909bbcf7418d6ee3",
+    "sourceCount": 4,
+    "alreadyPublished": true,
+    "replacedJobId": null,
+    "tool": "publish_weekly_report",
+    "upstreamTools": [
+      "notion-fetch",
+      "notion-fetch"
+    ],
+    "existingChildLinksPreserved": 7,
+    "verifiedAt": "2026-10-26T08:26:58.277Z",
+    "warnings": []
+  },
+  "markerOccurrences": 1,
+  "managedSectionCount": 1,
+  "oldDraftRemoved": true,
+  "notionTableCount": 2,
+  "toolEvents": [
+    {
+      "type": "tool_use",
+      "name": "publish_weekly_report"
+    }
+  ],
+  "serverMode": "runtime",
+  "platformSourceChanged": false,
+  "platformRestarted": false,
+  "automaticScheduledSync": false,
+  "passed": true,
+  "pdf": {
+    "file": "output/pdf/Daylog_Unnestflow_Integration_Evidence.pdf",
+    "pages": 15,
+    "summaryPages": 1,
+    "procedurePages": 6,
+    "actualNotionScreenshotPages": 6,
+    "limitationsPages": 1,
+    "historicalSummaryPages": 1,
+    "sha256": "41244d9644b908120769430ecfa505ac16fc604d79585bc9d87ff7d1f0faaf7e",
+    "format": "explain-process; visual redesign with system connection view, teal step numbers, navy tables and enlarged actual screenshot viewports",
+    "previousHistoricalPagesReorganized": true,
+    "historicalPageTextAndPixelsPreserved": false
+  },
+  "screenshots": {
+    "daylog": "actual UI",
+    "unnestflow": "actual Runtime UI and saved session",
+    "notion": "actual authenticated Notion web UI; twelve original screenshots",
+    "notionMcpReadback": "earlier separately labeled MCP readback visualization retained in evidence folder"
+  },
+  "connectorScopeChecks": {
+    "exposesOnlyScopedPublishTool": true,
+    "rawNotionWriteToolRejected": true,
+    "arbitraryPageArgumentRejected": true,
+    "pathTraversalRejected": true
+  },
+  "notionWebCapture": {
+    "actualWebScreenshotCount": 12,
+    "method": "Actual Notion web UI in a dedicated browser; no page recreation; TLS verification enabled",
+    "captureManifest": "output/weekly-notion/notion-web/capture-manifest.json",
+    "firstCapturedAt": "2026-10-26T09:21:39.159Z",
+    "lastCapturedAt": "2026-10-26T09:24:49.213Z",
+    "loginCompletedByUser": true,
+    "existingCredentialStoresRead": false,
+    "authStateExported": false,
+    "documentContentModifiedDuringCapture": false
+  },
+  "reportRevision": {
+    "skill": "explain-process/SKILL.md",
+    "existingEvidenceReused": true,
+    "liveServiceExecutionDuringRewrite": false,
+    "allNumberedItemsPresent": true,
+    "allTwelveActualNotionPhotosPreserved": true,
+    "historicalFiveCasesPreserved": true,
+    "allPagesRenderedAndReviewed": true,
+    "visualRedesign": true,
+    "originalScreenshotFilesUnchanged": true,
+    "fullOriginalBodyAndTableTextPreserved": true
+  }
+}

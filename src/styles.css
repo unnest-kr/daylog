@@ -191,6 +191,13 @@ select {
 .header-button.primary:not(:disabled):hover {
 	background: var(--teal-dark);
 }
+.review-count {
+	padding: 1px 6px;
+	border-radius: 999px;
+	background: #ffffff26;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
 .pane-tabs {
 	display: none;
 }
@@ -1583,6 +1590,9 @@ select {
 	.header-button span {
 		display: none;
 	}
+	.header-button.review-button span {
+		display: inline;
+	}
 	.document-pane {
 		padding: 20px 18px;
 	}
@@ -1613,3 +1623,6 @@ select {
 		transition: none !important;
 	}
 }
+.weekly-notice { padding: 10px 24px; background: #eef7f1; color: #215b3b; font-size: 13px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.weekly-notice a { color: #215b3b; font-weight: 600; }
+.weekly-notice button { border: 1px solid #b9d9c6; border-radius: 6px; background: white; color: #215b3b; padding: 5px 9px; cursor: pointer; }
