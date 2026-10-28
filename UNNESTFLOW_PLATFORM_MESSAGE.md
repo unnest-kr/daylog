@@ -2,6 +2,16 @@
 
 작성일: 2026-10-27 KST. 실제 Notion 연동 증빙은 2026-10-26 실행 기록이며, 이번 작업은 Git 공유용 소스·템플릿·문서를 정리한 것이다. 이 문서를 작성하면서 Unnestflow 설정을 변경하거나 실제 Notion에 게시하지 않았다.
 
+## #247 Daylog 측 선행 검증 — 2026-10-28
+
+[Unnestflow #247](https://github.com/unnest-kr/unnestflow/issues/247)의 Daylog → Unnestflow MCP 호출 계약을 플랫폼 개발과 별도로 검증할 수 있도록 `npm run test:mcp`와 `npm run demo:mcp`를 추가했다. 상세 실행 방법은 [README의 MCP 계약 검증](./README.md#unnestflow-없이-mcp-계약-검증)을 참고한다.
+
+- 실제 MCP SDK 모의 서버로 initialize·도구 목록·도구 호출, 선택 보고서와 대화 연결, 실패 저장 방지·재시도를 검증한다. API 키는 합성 값이며 서버에서만 사용한다.
+- Daylog에서 인증·도구 미노출·입력 불일치·실행 실패·시간 초과를 구분한다. 연결 확인은 도구 목록 조회까지이며 실제 실행 성공으로 표시하지 않는다.
+- 공유되는 앱의 Notion 경로는 Daylog → Unnestflow Flow → 전용 커넥터·OAuth 브리지 → Notion 공식 MCP다. Daylog 연결 설정에 Notion URL을 직접 입력하는 기능은 이번 변경에 포함되지 않는다. 기존 브리지·어댑터 소스는 `connectors/`에서 재사용할 수 있다.
+- 모의 응답은 고정된 테스트 문구다. 이 단계에서 Unnestflow 소스·서버·게시 설정이나 실제 모델·Notion을 호출 또는 변경하지 않는다.
+- 플랫폼 작업이 끝나면 실제 프로젝트 MCP 주소와 게시 Flow로 다시 실행해야 한다. 활성 publication·권한·실제 모델 실행·HTTPS 및 두 저장소 revision의 증거를 확인하기 전까지 #247의 전체 완료는 보류한다.
+
 ## 1. 전달할 핵심
 
 **Unnestflow 제품 소스를 수정해서 연동한 것이 아니다.** 기존 Chat Input, Language Model, Agent, MCP Tools, Chat Output과 Flow API를 사용해 세 Flow와 두 MCP 연결을 등록했다. 등록할 때는 Builder로 잠시 전환한 뒤 Runtime으로 복원했고, 실제 실행은 Runtime에서 확인했다.

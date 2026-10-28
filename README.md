@@ -75,6 +75,8 @@ Runtime 모드에서 MCP 편집 기능이 제한된 Unnestflow에는 게시된 F
 
 이 경로는 **Unnestflow가 외부 Notion MCP를 호출**하는 연결입니다. 위에서 설명한 **Daylog가 Unnestflow 자체 MCP 도구를 호출**하는 경로와 구분합니다. Notion 공식 원격 MCP 주소는 `https://mcp.notion.com/mcp`이며 OAuth 인증은 `mcp-remote` 브리지에서 처리합니다. 조회 어댑터는 지정한 보고 영역의 `notion-fetch` 하나만 노출합니다.
 
+Daylog의 연결 설정에 Notion 공식 MCP URL을 직접 입력하는 기능은 제공하지 않습니다. 앱에서는 Unnestflow Flow와 전용 커넥터를 거쳐 Notion을 사용합니다. Daylog 폴더에서 수행했던 별도 스크립트의 직접 조회는 앱의 연결 설정 기능과 구분하며, 공유용 브리지·어댑터 구성은 `connectors/`에 있습니다.
+
 현재 설정·브리지·OAuth 캐시는 이 PC의 Git 제외 경로인 `.data/`에 있습니다. 다른 PC나 컨테이너에 배포하려면 실행 경로와 인증 보관을 따로 구성해야 합니다. 이 연결은 Notion 문서를 Daylog SQLite로 자동 가져오는 동기화 기능을 추가하지 않습니다. 내부 공유용 실행 증빙은 `output/notion-integration/verification.json`에서 확인할 수 있습니다.
 
 ### Notion 주간보고 작성 시연
@@ -167,6 +169,36 @@ npm start
 `npm start`는 `.env`를 읽고 기본 http://127.0.0.1:3090 에서 API와 빌드된 화면을 제공합니다. Docker와 달리 로컬 데이터는 `.data/reports.sqlite`에 저장합니다. 프런트 개발은 API 서버를 실행한 상태에서 별도 터미널의 `npm run dev`를 사용합니다. `npm run up`은 `docker compose up -d --build`의 단축 명령입니다.
 
 GitHub Actions는 서버 테스트, TypeScript 검사, Vite 빌드, **운영 Docker 이미지 빌드와 해당 이미지의 테스트**를 수행합니다. 외부 모델이나 API 키 없이 실행되며, 실제 Unnestflow·모델 응답은 별도의 연동 환경에서 확인해야 합니다. 이미지는 레지스트리에 자동 게시하지 않습니다.
+
+### Unnestflow 없이 MCP 계약 검증
+
+```bash
+npm run test:mcp
+```
+
+실제 MCP SDK의 Streamable HTTP 서버를 임시 localhost 포트에 띄워 **Daylog HTTP API → MCP 클라이언트 → 모의 MCP 도구 → 대화 저장·재조회**를 검증합니다. `invokeFlow`를 고정 응답 함수로 대체하지 않고 실제 `initialize → tools/list → tools/call`을 전송합니다. 시간 초과 사례만 내부 대기 시간을 줄이며, 모의 서버의 답변은 합성 고정 문구입니다. Unnestflow, 실제 모델, Notion, `.env`, 기존 SQLite DB는 사용하지 않습니다.
+
+검증 항목은 도구 목록 페이지 처리, SSE·JSON 응답, 선택 보고서만 전달, 근거 ID·hash, 대화 재개 시 `session_id` 유지, 보고서 변경 시 새 대화, 서버 전용 API 키, 인증 실패, 도구 미노출·입력 불일치, 실행 오류·빈 응답, 시간 초과·취소, 실패 저장 방지와 재시도입니다. 연결 확인의 `verification: "discovery"`는 도구 목록 확인만 뜻하며 Flow 실행 성공을 보증하지 않습니다.
+
+| 실패 코드 | Daylog 응답 | 확인할 사항 |
+| --- | --- | --- |
+| `FLOW_AUTH_FAILED` | HTTP 502 | 서버 API 키·실행 권한 |
+| `FLOW_TOOL_NOT_FOUND` | HTTP 502 | 도구 이름·프로젝트·게시·공유 상태 |
+| `FLOW_INPUT_INCOMPATIBLE` | HTTP 502 | 문자열 `input_value`·`session_id`, 추가 필수 입력 여부 |
+| `FLOW_EXECUTION_FAILED` | HTTP 502 | MCP `isError`, 실행 오류·빈 text 응답 |
+| `FLOW_TIMEOUT` | HTTP 504 | 응답 대기 시간 초과 |
+| `FLOW_CONNECTION_FAILED` | HTTP 502 | 주소·서버·도구 목록 응답 |
+
+브라우저에서 같은 모의 경로를 직접 확인하려면 다음 명령을 실행하고 **http://127.0.0.1:3091** 을 엽니다. Windows PowerShell에서 실행 정책이 `npm.ps1`을 막으면 `npm.cmd`를 사용합니다.
+
+```bash
+npm run build
+npm run demo:mcp
+```
+
+합성 보고서 4개가 있는 별도 메모리 워크스페이스입니다. 질문을 보내면 실제 MCP 통신을 거친 **테스트 응답**이 표시됩니다. 기존 Daylog 설정·DB와 Unnestflow 서버는 변경하지 않으며, Ctrl+C로 종료하면 데모 데이터는 사라집니다. 이 명령은 저장소의 `scripts/`·`test/`를 사용하므로 기본 운영 Docker 이미지에서는 제공하지 않습니다.
+
+이 검증만으로 [Unnestflow #247](https://github.com/unnest-kr/unnestflow/issues/247)을 완료 처리하지 않습니다. Unnestflow 작업 후 실제 프로젝트 주소·도구·인증으로 연결해 **활성 publication·실행 권한·실제 Flow와 모델 답변·HTTPS 인증서**를 확인하고 두 저장소 revision과 실행 증거를 남겨야 합니다. Flow API 또는 Notion MCP 연동 성공은 이 MCP 경로의 검증을 대신하지 않습니다.
 
 ## 현재 범위
 

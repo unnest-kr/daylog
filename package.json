@@ -11,6 +11,8 @@
 		"build": "tsc --noEmit && vite build",
 		"start": "node --env-file-if-exists=.env server/index.mjs",
 		"test": "node --test test/*.test.mjs",
+		"test:mcp": "node --test test/mcp.test.mjs test/mcp-contract.test.mjs",
+		"demo:mcp": "node scripts/demo-mcp.mjs",
 		"up": "docker compose up -d --build"
 	},
 	"dependencies": {

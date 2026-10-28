@@ -389,7 +389,7 @@ export function SettingsDialog({
 								disabled={!item.compatible}
 							>
 								{item.name}
-								{!item.compatible ? " (Chat Input 필요)" : ""}
+								{!item.compatible ? " (보고서·대화 입력 미지원)" : ""}
 							</option>
 						))}
 					</select>
@@ -433,7 +433,7 @@ export function SettingsDialog({
 			{connection?.connected && (
 				<div className="success-note">
 					<CheckCircle2 size={16} />
-					연결되었습니다. 선택한 Flow로 대화할 수 있어요.
+					연결과 도구 목록을 확인했습니다. 실제 답변은 질문을 보내 확인해 주세요.
 				</div>
 			)}
 			<div className="modal-footer">

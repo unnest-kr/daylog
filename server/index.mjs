@@ -4,7 +4,8 @@ import { resolve, extname, join, relative, isAbsolute, sep } from "node:path";
 import { randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createStore } from "./store.mjs";
-import { withMcp, listTools, callFlow as callMcpFlow } from "./mcp.mjs";
+import { withMcp, listTools, compatibleFlowTool, callFlow as callMcpFlow } from "./mcp.mjs";
+import { FlowError, flowFailure } from "./flow-errors.mjs";
 import { flowApiId, checkFlowApi, callFlowApi } from "./flow-api.mjs";
 import { buildContext, MAX_CONTEXT_BYTES } from "./context.mjs";
 import { sampleReports } from "./samples.mjs";
@@ -163,22 +164,20 @@ export function createApp({
 							({ name, description, inputSchema }) => ({
 								name,
 								description,
-								compatible: Boolean(inputSchema?.properties?.input_value),
+								compatible: compatibleFlowTool({ inputSchema }),
 							}),
 						),
 						server: client.getServerVersion()?.name,
 					}));
 					return send(res, 200, {
 						...result,
+						verification: "discovery",
 						connected: result.tools.some(
 							(tool) => tool.name === settings().toolName && tool.compatible,
 						),
 					});
-				} catch {
-					throw fail(
-						502,
-						"Unnestflow 연결을 확인해 주세요. 연결 주소, API 키, Flow 게시 상태와 실행 권한을 확인할 수 있습니다.",
-					);
+				} catch (error) {
+					throw flowFailure(error);
 				}
 			}
 			if (path === "/api/settings" && method === "PUT") {
@@ -318,12 +317,9 @@ export function createApp({
 							conversationId,
 							controller.signal,
 						);
-					} catch {
+					} catch (error) {
 						if (controller.signal.aborted) return;
-						throw fail(
-							502,
-							"Flow의 답변을 받지 못했습니다. 연결 설정과 Unnestflow 실행 기록을 확인한 뒤 다시 시도해 주세요.",
-						);
+						throw flowFailure(error, "FLOW_EXECUTION_FAILED");
 					}
 					if (controller.signal.aborted) return;
 					const saved = store.saveTurn({
@@ -372,9 +368,10 @@ export function createApp({
 			return res.end(method === "HEAD" ? undefined : readFileSync(file));
 		} catch (error) {
 			return send(res, error.status ?? 500, {
-				error: error.status
+				error: error instanceof FlowError ? error.publicMessage : error.status
 					? error.message
 					: "서버에서 요청을 처리하지 못했습니다.",
+				...(error instanceof FlowError ? { code: error.code } : {}),
 			});
 		}
 	});

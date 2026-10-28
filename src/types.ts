@@ -40,6 +40,7 @@ export interface Settings {
 }
 export interface Connection {
 	connected: boolean;
+	verification?: "discovery";
 	server?: string;
 	tools: { name: string; description?: string; compatible: boolean }[];
 }
