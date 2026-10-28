@@ -6,13 +6,12 @@ import {
 	FileText,
 	Link2,
 	LoaderCircle,
-	Trash2,
 	UploadCloud,
 	X,
 } from "lucide-react";
 import { api, koreanToday } from "./api";
 import Markdown from "./Markdown";
-import type { Connection, Report, Settings, UploadResult } from "./types";
+import type { Connection, Settings, UploadResult } from "./types";
 
 export function Modal({
 	children,
@@ -364,20 +363,20 @@ export function SettingsDialog({
 			</span>
 			<h2>Unnestflow 연결</h2>
 			<p className="modal-description">
-				Unnestflow가 MCP 서버로 Flow를 제공하고,
+				Unnestflow의 Flow 실행 API 또는 MCP에 연결해,
 				<br />
 				Daylog 서버가 선택한 보고서와 질문을 전달합니다.
 			</p>
 			<label className="field">
-				MCP 서버 주소
+				Unnestflow 연결 주소
 				<input
 					value={url}
 					onChange={(event) => setUrl(event.target.value)}
-					placeholder="http://127.0.0.1:7890/api/v1/mcp/project/…/streamable"
+					placeholder="http://127.0.0.1:7860/api/v1/run/Flow-ID"
 				/>
 			</label>
 			<label className="field">
-				Flow 도구 이름
+				Flow 이름 / MCP 도구 이름
 				{connection?.tools.length ? (
 					<select
 						value={tool}
@@ -390,7 +389,7 @@ export function SettingsDialog({
 								disabled={!item.compatible}
 							>
 								{item.name}
-								{!item.compatible ? " (Chat Input 필요)" : ""}
+								{!item.compatible ? " (보고서·대화 입력 미지원)" : ""}
 							</option>
 						))}
 					</select>
@@ -434,7 +433,7 @@ export function SettingsDialog({
 			{connection?.connected && (
 				<div className="success-note">
 					<CheckCircle2 size={16} />
-					연결되었습니다. 선택한 Flow로 대화할 수 있어요.
+					연결과 도구 목록을 확인했습니다. 실제 답변은 질문을 보내 확인해 주세요.
 				</div>
 			)}
 			<div className="modal-footer">
@@ -457,49 +456,4 @@ export function SettingsDialog({
 		</Modal>
 	);
 }
-
-export function ReportDialog({
-	report,
-	onClose,
-	onDelete,
-}: {
-	report: Report;
-	onClose: () => void;
-	onDelete: (id: string) => void;
-}) {
-	return (
-		<Modal onClose={onClose} className="report-modal">
-			<div className="preview-meta">
-				<span className="department-badge">{report.department}</span>
-				<span>{report.report_date}</span>
-				{Boolean(report.sample) && <span className="sample-badge">샘플</span>}
-			</div>
-			<h2>{report.title}</h2>
-			<p className="modal-description">
-				{report.filename} · {report.markdown?.length.toLocaleString()}자
-			</p>
-			<div className="report-preview">
-				<Markdown>{report.markdown ?? ""}</Markdown>
-			</div>
-			<div className="modal-footer">
-				<button
-					className="danger-button"
-					onClick={() => {
-						if (
-							window.confirm(
-								`“${report.title}” 보고서를 삭제할까요? 기존 대화의 원문을 다시 열 수 없게 됩니다.`,
-							)
-						)
-							onDelete(report.id);
-					}}
-				>
-					<Trash2 size={14} />
-					보고서 삭제
-				</button>
-				<button className="secondary-button" onClick={onClose}>
-					닫기
-				</button>
-			</div>
-		</Modal>
-	);
-}
+

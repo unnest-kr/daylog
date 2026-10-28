@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-10-26T06:33:34.339Z",
+  "endpoint": "https://127.0.0.1:7860/api/v1/mcp/streamable",
+  "transport": "MCP Streamable HTTP",
+  "authentication": "x-api-key (value excluded)",
+  "tlsVerification": "configured CA + hostname verified",
+  "stages": [
+    {
+      "method": "initialize",
+      "requestId": 1,
+      "httpStatus": 200,
+      "elapsedMs": 398,
+      "reply": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+          "protocolVersion": "2025-03-26",
+          "capabilities": {
+            "experimental": {},
+            "prompts": {
+              "listChanged": false
+            },
+            "resources": {
+              "subscribe": false,
+              "listChanged": false
+            },
+            "tools": {
+              "listChanged": false
+            }
+          },
+          "serverInfo": {
+            "name": "langflow-mcp-server",
+            "version": "1.28.1"
+          }
+        }
+      }
+    },
+    {
+      "method": "notifications/initialized",
+      "requestId": null,
+      "httpStatus": 202,
+      "elapsedMs": 224,
+      "reply": null
+    },
+    {
+      "method": "tools/list",
+      "requestId": 2,
+      "httpStatus": 200,
+      "elapsedMs": 2351,
+      "reply": {
+        "result": {
+          "tools": [
+            {
+              "name": "daylog_saeop_bogoseo_geomto",
+              "description": "61b91688-c559-496a-b5d5-ec990055a414: Daylog가 전달한 보고서의 사업별 현황·의견·수정안과 근거를 검토합니다.",
+              "inputSchema": {
+                "type": "object",
+                "properties": {
+                  "input_value": {
+                    "type": "string",
+                    "description": "Message to be passed as input."
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "description": "Optional session identifier used to persist conversation history across tool calls. Omit to start a new session."
+                  }
+                },
+                "required": []
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "tools/call",
+      "requestId": 3,
+      "httpStatus": 200,
+      "elapsedMs": 919,
+      "reply": {
+        "jsonrpc": "2.0",
+        "id": 3,
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Error Executing the Daylog 사업 보고서 검토 tool. Error: 'Flow' object has no attribute 'execution_context'"
+            }
+          ],
+          "isError": false
+        }
+      }
+    }
+  ],
+  "passed": false,
+  "toolName": "daylog_saeop_bogoseo_geomto",
+  "answer": "Error Executing the Daylog 사업 보고서 검토 tool. Error: 'Flow' object has no attribute 'execution_context'",
+  "totalDiscoveredTools": 19
+}

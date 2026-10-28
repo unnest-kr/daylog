@@ -1,28 +1,43 @@
 import {
+	CalendarDays,
 	Check,
-	FileText,
+	ChevronDown,
+	FolderOpen,
 	Search,
 	UploadCloud,
-	Eye,
-	FolderOpen,
 	X,
 } from "lucide-react";
 import type { Report } from "./types";
 import { useState } from "react";
+import { dateLabel } from "./api";
 
 interface Props {
 	reports: Report[];
+	total: number;
+	departments: { name: string; count: number }[];
+	department: string;
+	date: string;
+	busy: boolean;
 	selected: string[];
+	onFilter: (department: string, date: string) => void;
 	onSelection: (ids: string[]) => void;
-	onPreview: (id: string) => void;
+	onShow: (id: string) => void;
 	onUpload: () => void;
+	onSamples: () => void;
 }
 export default function ReportLibrary({
 	reports,
+	total,
+	departments,
+	department,
+	date,
+	busy,
 	selected,
+	onFilter,
 	onSelection,
-	onPreview,
+	onShow,
 	onUpload,
+	onSamples,
 }: Props) {
 	const [search, setSearch] = useState("");
 	const visible = reports.filter((report) =>
@@ -41,25 +56,52 @@ export default function ReportLibrary({
 		);
 	}
 	return (
-		<section className="library-panel" aria-label="보고서 라이브러리">
-			<div className="panel-heading">
-				<h2>
-					보고서 라이브러리 <span>{reports.length}</span>
-				</h2>
-				<button
-					className="icon-button"
-					title="보고서 올리기"
-					aria-label="보고서 올리기"
-					onClick={onUpload}
-				>
-					<UploadCloud size={17} />
-				</button>
+		<section className="pane library-pane" aria-label="보고서 목록">
+			<div className="library-filters">
+				<label className="select-filter">
+					<select
+						aria-label="부서 필터"
+						value={department}
+						disabled={busy}
+						onChange={(event) => onFilter(event.target.value, date)}
+					>
+						{departments.map((item) => (
+							<option key={item.name} value={item.name}>
+								{item.name} {item.count}
+							</option>
+						))}
+					</select>
+					<ChevronDown size={14} />
+				</label>
+				<label className="date-filter">
+					<CalendarDays size={14} />
+					<span>{date ? dateLabel(date) : "전체 기간"}</span>
+					<input
+						type="date"
+						aria-label="보고 날짜 필터"
+						value={date}
+						disabled={busy}
+						onChange={(event) => onFilter(department, event.target.value)}
+					/>
+					{date && (
+						<button
+							aria-label="전체 기간 보기"
+							disabled={busy}
+							onClick={(event) => {
+								event.preventDefault();
+								onFilter(department, "");
+							}}
+						>
+							<X size={12} />
+						</button>
+					)}
+				</label>
 			</div>
 			<label className="search-box">
-				<Search size={16} />
+				<Search size={15} />
 				<input
 					aria-label="보고서 검색"
-					placeholder="보고서 제목, 부서 검색"
+					placeholder="제목, 부서 검색"
 					value={search}
 					onChange={(event) => setSearch(event.target.value)}
 				/>
@@ -70,9 +112,9 @@ export default function ReportLibrary({
 				)}
 			</label>
 			<div className="selection-toolbar">
-				<span>{visible.length}개의 보고서</span>
+				<span>{visible.length}개 보고서</span>
 				<button
-					disabled={!visible.length}
+					disabled={!visible.length || busy}
 					onClick={() =>
 						onSelection(
 							allSelected
@@ -94,80 +136,78 @@ export default function ReportLibrary({
 			<div className="report-list">
 				{!visible.length && (
 					<div className="library-empty">
-						<FolderOpen size={33} strokeWidth={1.3} />
+						<FolderOpen size={28} strokeWidth={1.4} />
 						<strong>
-							{search ? "검색 결과가 없어요" : "아직 보고서가 없어요"}
+							{search
+								? "검색 결과가 없어요"
+								: total
+									? "이 조건의 보고서가 없어요"
+									: "아직 보고서가 없어요"}
 						</strong>
 						<p>
 							{search
 								? "다른 제목이나 부서로 찾아보세요."
-								: "Markdown 보고서를 올리고\n팀의 하루를 모아보세요."}
+								: total
+									? "부서나 날짜를 바꿔 보세요."
+									: "Markdown 보고서를 올리고\n팀의 하루를 모아보세요."}
 						</p>
-						{!search && (
-							<button className="text-link" onClick={onUpload}>
-								첫 보고서 올리기 <UploadCloud size={14} />
-							</button>
+						{!search && !total && (
+							<div className="empty-actions">
+								<button className="chip primary" onClick={onUpload}>
+									<UploadCloud size={14} />
+									보고서 올리기
+								</button>
+								<button className="chip" onClick={onSamples} disabled={busy}>
+									샘플 보고서로 시작하기
+								</button>
+							</div>
 						)}
 					</div>
 				)}
-				{visible.map((report) => (
-					<article
-						className={`report-card ${selected.includes(report.id) ? "selected" : ""}`}
-						key={report.id}
-					>
-						<label className="report-select">
-							<input
-								type="checkbox"
-								checked={selected.includes(report.id)}
-								onChange={() => toggle(report.id)}
-								aria-label={`${report.title} 선택`}
-							/>
-							<span className="check-visual">
-								<Check size={12} />
-							</span>
-							<span className="report-meta">
-								<span className="department-badge">{report.department}</span>
-								{Boolean(report.sample) && (
-									<span className="sample-badge">샘플</span>
-								)}
-							</span>
-							<time>{report.report_date.slice(5).replace("-", ".")}</time>
-						</label>
-						<button
-							className="report-title"
-							onClick={() => onPreview(report.id)}
+				{visible.map((report) => {
+					const checked = selected.includes(report.id);
+					return (
+						<div
+							className={`report-row ${checked ? "selected" : ""}`}
+							key={report.id}
 						>
-							{report.title.replace(/^\[샘플\]\s*/, "")}
-						</button>
-						<p>
-							{report.preview
-								.replace(/[#*`>\-]/g, "")
-								.replace(/\n/g, " ")
-								.trim()}
-						</p>
-						<div className="report-card-footer">
-							<span>
-								<FileText size={12} />
-								{report.filename}
-							</span>
+							<label className="report-check">
+								<input
+									type="checkbox"
+									checked={checked}
+									disabled={busy}
+									onChange={() => toggle(report.id)}
+									aria-label={`${report.title} 선택`}
+								/>
+								<span className="check-visual">
+									<Check size={12} strokeWidth={3} />
+								</span>
+							</label>
 							<button
-								aria-label={`${report.title} 미리보기`}
-								onClick={() => onPreview(report.id)}
+								className="report-row-main"
+								disabled={!checked}
+								onClick={() => onShow(report.id)}
+								title={
+									checked
+										? `${report.title} · 본문에서 보기`
+										: `${report.title} · 선택하면 본문에 표시돼요`
+								}
 							>
-								<Eye size={14} />
+								<span className="department-badge">{report.department}</span>
+								<span className="report-row-title">
+									{report.title.replace(/^\[샘플\]\s*/, "")}
+								</span>
+								<time>{report.report_date.slice(5).replace("-", ".")}</time>
 							</button>
 						</div>
-					</article>
-				))}
+					);
+				})}
 			</div>
-			<div className="library-bottom">
-				<span className="tiny-dot" />
-				<p>
-					선택한 보고서만 대화에 사용돼요.
-					<br />
-					선택을 바꾸면 새 대화가 시작됩니다.
-				</p>
-			</div>
+			<p className="library-note">
+				선택한 보고서만 대화에 사용돼요.
+				<br />
+				선택을 바꾸면 새 대화가 시작됩니다.
+			</p>
 		</section>
 	);
 }

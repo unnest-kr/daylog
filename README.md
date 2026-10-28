@@ -1,8 +1,8 @@
 # Daylog
 
-부서별 Markdown 업무 보고서를 모으고, 선택한 자료에 대해 질문하는 웹 애플리케이션입니다. React 화면과 Node.js API 서버를 **하나의 컨테이너**로 빌드합니다. 보고서와 대화는 SQLite에 저장하고, 답변은 외부 Unnestflow의 Flow를 MCP로 호출해 생성합니다.
+부서별 Markdown 업무 보고서를 모으고, 선택한 자료에 대해 질문하는 웹 애플리케이션입니다. React 화면과 Node.js API 서버를 **하나의 컨테이너**로 빌드합니다. 보고서와 대화는 SQLite에 저장하고, 답변은 외부 Unnestflow의 Flow 실행 API 또는 MCP를 호출해 생성합니다.
 
-![보고서 선택과 실제 Flow 답변 예시](docs/screenshots/sample-conversation.png)
+![보고서 목록·본문·AI 검토 3단 화면 예시 (답변은 화면 설명용 예시 문구)](docs/screenshots/sample-conversation.png)
 
 ## 빠른 시작
 
@@ -59,11 +59,45 @@ chmod 600 .env
 docker compose up -d
 ```
 
-왼쪽 아래 **연결 설정 → 저장하고 연결 확인**에서 실제 MCP 도구를 확인합니다. API 키는 서버 환경변수로만 읽으며 브라우저에 반환하지 않습니다. `.env`는 Git과 이미지 빌드에서 제외합니다. `FLOW_URL`은 브라우저에서 열 수 있는 편집 화면 주소이며 선택 사항입니다.
+오른쪽 위 **연결 설정 → 저장하고 연결 확인**에서 실제 MCP 도구를 확인합니다. API 키는 서버 환경변수로만 읽으며 브라우저에 반환하지 않습니다. `.env`는 Git과 이미지 빌드에서 제외합니다. `FLOW_URL`은 브라우저에서 열 수 있는 편집 화면 주소이며 선택 사항입니다.
 
 화면에서 저장한 MCP 주소·도구 이름은 DB에 보관하며 환경변수보다 우선합니다. 기존 설치의 `.env` 주소를 변경했는데 반영되지 않으면 연결 설정 화면에서도 주소를 변경합니다. API 키 변경은 컨테이너를 재생성해야 반영됩니다.
 
-연동 서버는 MCP 도구 목록 조회뿐 아니라 실제 Flow 실행도 지원해야 합니다. 일부 Unnestflow MCP 핸들러에서 `'Flow' object has no attribute 'execution_context'` 오류가 발생하는 것을 확인했습니다. 이 오류가 나면 실행용 Flow 조회와 권한 검사가 수정된 Unnestflow 서버가 필요합니다. Daylog는 해당 서버 소스나 패치를 포함하지 않으며, 실제 MCP 연동 검증은 이 문제가 수정된 서버에서 수행했습니다.
+Runtime 모드에서 MCP 편집 기능이 제한된 Unnestflow에는 게시된 Flow의 실행 주소를 **연결 설정**에 입력합니다. `MCP_URL`에 `http://127.0.0.1:7860/api/v1/run/FLOW_UUID`를 설정해도 됩니다. 기존 환경변수 이름은 그대로 사용하며 `/api/v1/run/UUID` 주소를 자동으로 구분합니다. 연결 확인은 같은 서버의 `/api/v1/flows/published`에서 해당 계정이 실행할 수 있는 Flow인지 조회합니다. 실제 호출은 `input_request`에 `input_value`, `input_type: "chat"`, `output_type: "chat"`, `session_id`를 담아 전송하고 Chat Output의 텍스트를 사용합니다. 이 방식에서는 별도의 MCP 도구 노출이 필요하지 않습니다. API 키는 `UNNESTFLOW_API_KEY`에 설정하고, Node로 직접 실행 중이면 Daylog API 서버를 재시작해야 반영됩니다.
+
+로컬 HTTPS Flow API에서 자체 인증서를 사용하면 `UNNESTFLOW_CA_CERT_FILE`에 신뢰할 공개 인증서 또는 CA의 PEM 파일 경로를 설정합니다. 서버 인증서와 호스트 이름 검증은 유지됩니다. 이 파일 경로와 API 키는 브라우저에 반환하지 않습니다.
+
+연동 서버는 MCP 도구 목록 조회뿐 아니라 실제 Flow 실행도 지원해야 합니다. 일부 Unnestflow MCP 핸들러에서 `'Flow' object has no attribute 'execution_context'` 오류가 발생하는 것을 확인했습니다. 현재 로컬 검증에서는 해당 서버를 수정하지 않았으며, Daylog의 실제 검토 실행은 게시된 Flow API 경로로 확인했습니다. 이 MCP 도구 실행 오류는 별도 해결과 재검증이 필요합니다.
+
+### Notion MCP 연계 검증
+
+2026-10-26 로컬 Unnestflow에서 `Chat Input → Agent → Chat Output`과 `MCP Tools → Agent Tools`를 연결한 별도 비공개 Flow의 실제 실행을 확인했습니다. Notion OAuth 승인 후, Agent의 `notion-fetch` 호출과 원문에 있는 보고 페이지·DB·아카이브 링크가 응답에 포함되는 것을 검증했습니다. 한 번의 종합 조회는 약 18.5초였으며 성능 보장 수치는 아닙니다.
+
+이 경로는 **Unnestflow가 외부 Notion MCP를 호출**하는 연결입니다. 위에서 설명한 **Daylog가 Unnestflow 자체 MCP 도구를 호출**하는 경로와 구분합니다. Notion 공식 원격 MCP 주소는 `https://mcp.notion.com/mcp`이며 OAuth 인증은 `mcp-remote` 브리지에서 처리합니다. 조회 어댑터는 지정한 보고 영역의 `notion-fetch` 하나만 노출합니다.
+
+Daylog의 연결 설정에 Notion 공식 MCP URL을 직접 입력하는 기능은 제공하지 않습니다. 앱에서는 Unnestflow Flow와 전용 커넥터를 거쳐 Notion을 사용합니다. Daylog 폴더에서 수행했던 별도 스크립트의 직접 조회는 앱의 연결 설정 기능과 구분하며, 공유용 브리지·어댑터 구성은 `connectors/`에 있습니다.
+
+현재 설정·브리지·OAuth 캐시는 이 PC의 Git 제외 경로인 `.data/`에 있습니다. 다른 PC나 컨테이너에 배포하려면 실행 경로와 인증 보관을 따로 구성해야 합니다. 이 연결은 Notion 문서를 Daylog SQLite로 자동 가져오는 동기화 기능을 추가하지 않습니다. 내부 공유용 실행 증빙은 `output/notion-integration/verification.json`에서 확인할 수 있습니다.
+
+### Notion 주간보고 작성 시연
+
+2026-10-26에는 **문서 업로드 → Unnestflow 검토 → Notion 주간보고 저장 및 재조회**도 실제 실행했습니다. 상단 **Notion 주간보고**를 누르면 선택 문서로 부서별 활동, 사업별 진행 수치와 분모, 위험 및 다음 조치를 정리해 지정한 페이지에 게시합니다. 최근 대화를 열고 **이 검토 결과 게시**를 누르면 저장된 답변을 게시하거나 다시 확인할 수 있습니다.
+
+- 게시 대상은 사용자가 수정을 승인한 [주차별 보고 자료 (1)](https://app.notion.com/p/4054587c9925805da1bfeb84deae06ab) 하나입니다. 기존 팀별 페이지와 DB 링크 7개를 유지했습니다.
+- 기존 검토 Flow와 별도의 비공개 게시 Flow를 사용합니다. 서버 전용 `NOTION_WEEKLY_FLOW_URL`과 기존 API 키 및 CA 설정이 필요합니다.
+- Agent에는 `publish_weekly_report(job_id)`만 노출합니다. 본문과 대상은 서버가 저장한 작업으로 고정하며, Notion 저장본의 작업 표시와 원문 ID를 확인한 뒤에만 성공을 반환합니다.
+- 같은 검토 결과는 중복 추가하지 않습니다. 같은 대화의 수정본은 이 연결이 만든 해당 보고 영역만 갱신합니다. 다른 대화는 별도 보고 영역으로 추가됩니다.
+- AI 초안은 원문 대조가 필요합니다. 이번에도 분모 오기와 근거 없는 표현을 교정했습니다. 실행 버튼은 사람의 업무 승인을 의미하지 않습니다.
+
+입력은 `examples/weekly-notion-demo/`의 가상 문서 4개입니다. 결과는 `output/weekly-notion/verification.json`, `output/weekly-notion/weekly-report.md`에 보관했습니다. Daylog·Unnestflow 화면과 MCP 조회 결과는 `output/weekly-notion/evidence/`, 실제 로그인된 Notion 웹 화면 12장과 촬영 기록은 `output/weekly-notion/notion-web/`에 있습니다. 자세한 인계는 [WEEKLY_NOTION_HANDOFF.md](./WEEKLY_NOTION_HANDOFF.md)를 참고하세요.
+
+현재는 **이 PC용 시연**으로, 서버와 MCP 커넥터가 `.data/weekly-jobs/`를 함께 사용하고 커넥터 및 OAuth 캐시도 Daylog 폴더에 의존합니다. Flow 주소만 설정한다고 다른 PC나 컨테이너에서 바로 동작하지는 않습니다. 플랫폼 내 OAuth 관리, 사람의 승인 단계, 예약 실행과 자동 동기화는 구현하지 않았습니다.
+
+### 공유용 소스와 다른 환경으로 이전
+
+Git 공유용 어댑터 소스와 설정 예제는 [connectors/](./connectors/README.md), 세 Flow의 생성 템플릿은 [flows/](./flows/README.md)에 있습니다. 공유용 어댑터는 `NOTION_MCP_CONFIG`, `WEEKLY_JOBS_DIR`, `WEEKLY_EVIDENCE_DIR`로 개인 설정과 런타임 저장 경로를 지정할 수 있습니다. 기존 `.data/` 실행본은 자동으로 교체하지 않습니다.
+
+Unnestflow 쪽에 전달할 배포·설정 요청은 [UNNESTFLOW_PLATFORM_MESSAGE.md](./UNNESTFLOW_PLATFORM_MESSAGE.md), 당시 Flow ID·프롬프트·실행 증빙을 포함한 전체 기록은 [상세 인계](./UNNESTFLOW_DAYLOG_NOTION_HANDOFF.md)에 있습니다. Flow JSON만 가져와서는 커넥터 설치, OAuth 인증, 작업 저장소 공유와 publication 설정이 준비되지 않습니다. 기본 Daylog Docker 이미지에는 커넥터를 포함하지 않으며 Unnestflow 측 실행 환경에 따로 배포합니다.
 
 ### 컨테이너에서 연결 가능한 주소
 
@@ -89,9 +123,10 @@ docker run -d --name daylog \
 
 - UTF-8 `.md` / `.markdown` 업로드, 직접 작성, Markdown 미리보기
 - 부서·날짜 필터와 제목·부서 검색
-- 선택한 보고서를 Context로 사용하는 질문과 최근 대화 복원
-- 답변의 `[R1]` 등 근거 정보와 원문 미리보기
-- 모바일 화면과 요청 중단·실패 시 재시도
+- 왼쪽 목록에서 체크한 보고서의 원문을 가운데 본문에 이어서 표시, 본문에서 삭제
+- 선택한 보고서를 Context로 사용하는 오른쪽 AI 검토 대화와 최근 대화 복원
+- 답변의 `[R1]` 등 근거를 누르면 본문의 해당 보고서로 이동해 강조
+- 좁은 화면(1120px 미만)에서는 목록·본문·AI 검토 탭 전환, 요청 중단·실패 시 재시도
 
 선택한 문서 ID를 서버에서 다시 조회해 원문·부서·날짜·SHA-256과 함께 전달합니다. 최근 대화는 마지막 6개 메시지, 메시지당 최대 6,000자입니다. 문서 선택을 바꾸면 새 대화를 시작합니다. Flow 오류를 임의의 정상 답변으로 저장하지 않습니다.
 
@@ -135,6 +170,36 @@ npm start
 
 GitHub Actions는 서버 테스트, TypeScript 검사, Vite 빌드, **운영 Docker 이미지 빌드와 해당 이미지의 테스트**를 수행합니다. 외부 모델이나 API 키 없이 실행되며, 실제 Unnestflow·모델 응답은 별도의 연동 환경에서 확인해야 합니다. 이미지는 레지스트리에 자동 게시하지 않습니다.
 
+### Unnestflow 없이 MCP 계약 검증
+
+```bash
+npm run test:mcp
+```
+
+실제 MCP SDK의 Streamable HTTP 서버를 임시 localhost 포트에 띄워 **Daylog HTTP API → MCP 클라이언트 → 모의 MCP 도구 → 대화 저장·재조회**를 검증합니다. `invokeFlow`를 고정 응답 함수로 대체하지 않고 실제 `initialize → tools/list → tools/call`을 전송합니다. 시간 초과 사례만 내부 대기 시간을 줄이며, 모의 서버의 답변은 합성 고정 문구입니다. Unnestflow, 실제 모델, Notion, `.env`, 기존 SQLite DB는 사용하지 않습니다.
+
+검증 항목은 도구 목록 페이지 처리, SSE·JSON 응답, 선택 보고서만 전달, 근거 ID·hash, 대화 재개 시 `session_id` 유지, 보고서 변경 시 새 대화, 서버 전용 API 키, 인증 실패, 도구 미노출·입력 불일치, 실행 오류·빈 응답, 시간 초과·취소, 실패 저장 방지와 재시도입니다. 연결 확인의 `verification: "discovery"`는 도구 목록 확인만 뜻하며 Flow 실행 성공을 보증하지 않습니다.
+
+| 실패 코드 | Daylog 응답 | 확인할 사항 |
+| --- | --- | --- |
+| `FLOW_AUTH_FAILED` | HTTP 502 | 서버 API 키·실행 권한 |
+| `FLOW_TOOL_NOT_FOUND` | HTTP 502 | 도구 이름·프로젝트·게시·공유 상태 |
+| `FLOW_INPUT_INCOMPATIBLE` | HTTP 502 | 문자열 `input_value`·`session_id`, 추가 필수 입력 여부 |
+| `FLOW_EXECUTION_FAILED` | HTTP 502 | MCP `isError`, 실행 오류·빈 text 응답 |
+| `FLOW_TIMEOUT` | HTTP 504 | 응답 대기 시간 초과 |
+| `FLOW_CONNECTION_FAILED` | HTTP 502 | 주소·서버·도구 목록 응답 |
+
+브라우저에서 같은 모의 경로를 직접 확인하려면 다음 명령을 실행하고 **http://127.0.0.1:3091** 을 엽니다. Windows PowerShell에서 실행 정책이 `npm.ps1`을 막으면 `npm.cmd`를 사용합니다.
+
+```bash
+npm run build
+npm run demo:mcp
+```
+
+합성 보고서 4개가 있는 별도 메모리 워크스페이스입니다. 질문을 보내면 실제 MCP 통신을 거친 **테스트 응답**이 표시됩니다. 기존 Daylog 설정·DB와 Unnestflow 서버는 변경하지 않으며, Ctrl+C로 종료하면 데모 데이터는 사라집니다. 이 명령은 저장소의 `scripts/`·`test/`를 사용하므로 기본 운영 Docker 이미지에서는 제공하지 않습니다.
+
+이 검증만으로 [Unnestflow #247](https://github.com/unnest-kr/unnestflow/issues/247)을 완료 처리하지 않습니다. Unnestflow 작업 후 실제 프로젝트 주소·도구·인증으로 연결해 **활성 publication·실행 권한·실제 Flow와 모델 답변·HTTPS 인증서**를 확인하고 두 저장소 revision과 실행 증거를 남겨야 합니다. Flow API 또는 Notion MCP 연동 성공은 이 MCP 경로의 검증을 대신하지 않습니다.
+
 ## 현재 범위
 
 - 단일 공용 워크스페이스입니다. 사용자 로그인·SSO·부서별 ACL은 없으며 부서 필터는 접근 권한이 아닙니다.
@@ -157,4 +222,4 @@ GitHub Actions는 서버 테스트, TypeScript 검사, Vite 빌드, **운영 Doc
 | `compose.yaml` | Daylog 한 개 서비스와 전용 데이터 볼륨 |
 | `.github/workflows/ci.yml` | 테스트와 Docker 빌드 검증 |
 
-이 저장소에는 Unnestflow 제품 소스·서버 이미지·모델 가중치·실제 업로드 문서·DB·API 키를 포함하지 않습니다. 화면 예시는 샘플 보고서로 생성했습니다.
+이 저장소에는 Unnestflow 제품 소스·서버 이미지·모델 가중치·실제 업로드 문서·DB·API 키를 포함하지 않습니다. 화면 예시는 샘플 보고서로 생성했으며, 스크린샷 속 AI 답변은 실제 Flow 응답이 아닌 화면 설명용 예시 문구입니다.

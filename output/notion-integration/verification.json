@@ -1,0 +1,29 @@
+{
+  "verifiedAt": "2026-10-26T07:48:35.757Z",
+  "architecture": "Unnestflow published Flow -> MCP Tools -> read-only stdio adapter -> OAuth mcp-remote -> https://mcp.notion.com/mcp -> Notion",
+  "pageTitle": "주차별 보고 자료",
+  "pageUrl": "https://app.notion.com/p/3f94587c9925839a92b501acc6675a38",
+  "flowName": "Notion 주차별 보고 조회",
+  "flowId": "05ffe86e-9a6d-4fe4-8d04-9fe82743cd0a",
+  "playgroundUrl": "https://127.0.0.1:7860/playground/05ffe86e-9a6d-4fe4-8d04-9fe82743cd0a/",
+  "mcpServerName": "notion-report-readonly",
+  "publicationStatus": "active",
+  "httpStatus": 200,
+  "elapsedMs": 18515,
+  "toolCalls": [
+    {
+      "name": "notion-fetch"
+    }
+  ],
+  "allowedTools": [
+    "notion-fetch"
+  ],
+  "scope": "Requested weekly report root and its explicitly linked report pages and submission database",
+  "authentication": "User-approved Notion OAuth; tokens excluded from this artifact",
+  "platformServerMode": "runtime",
+  "platformSourceChanged": false,
+  "platformRestarted": false,
+  "notionContentModified": false,
+  "daylogAutoSyncImplemented": false,
+  "answer": "• 페이지 제목: 주차별 보고 자료\n\n• 연결된 팀/직책 4개:\n  1. 대표이사 (https://app.notion.com/p/0292686402b24485b38f1de445fadb31)\n  2. 개발팀 (https://app.notion.com/p/efd3939406604eac9adc5e8fb7f001f4)\n  3. 사업팀 (https://app.notion.com/p/25e2e5e60f7b4aae9146dc4b693f53ec)\n  4. 인사팀 (https://app.notion.com/p/45a8bbeeb7c6493c885142f746cc642d)\n\n• 제출 현황 데이터베이스:\n  - 이름: 팀별 제출 현황\n  - 링크: https://app.notion.com/p/e688ca559de5446bb068c023aee7eb52\n\n• 보고 아카이브:\n  - 이름: 보고 아카이브\n  - 링크: https://app.notion.com/p/a458ce823d494112be97e1ea81509bff\n\n근거: https://app.notion.com/p/3f94587c9925839a92b501acc6675a38"
+}

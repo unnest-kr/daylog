@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "notion-readonly": {
+      "command": "node",
+      "args": [
+        "/ABSOLUTE/DAYLOG/.data/notion-mcp-bridge/node_modules/mcp-remote/dist/proxy.js",
+        "https://mcp.notion.com/mcp"
+      ],
+      "env": {
+        "MCP_REMOTE_CONFIG_DIR": "/PRIVATE/NOTION/OAUTH-CACHE"
+      }
+    }
+  }
+}

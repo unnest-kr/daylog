@@ -1,0 +1,206 @@
+{
+  "requestedUrl": "https://app.notion.com/p/4054587c9925805da1bfeb84deae06ab",
+  "method": "Actual Notion web UI in a dedicated browser; no page recreation; TLS verification enabled",
+  "existingCredentialStoresRead": false,
+  "captures": [
+    {
+      "file": "notion-web-01-overview.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:21:39.159Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion 페이지 제목과 기존 팀별 보고 구성",
+      "clip": null,
+      "sha256": "93f9a083d63f12dbc721793b2a08aa9019fed8ee168fb4d60017aef1cb575c5f",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-02-department-hub.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:21:49.588Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 팀별 제출 현황 DB와 기존 팀별 페이지",
+      "clip": null,
+      "sha256": "5e08dee948973f56c53ce50334b7fdaf3477c73db4fb700dc1c0b6b3e310bff1",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-03-weekly-start.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:21:49.968Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "Daylog가 게시한 주간보고 시작과 보고 기간 및 가상 자료 표시",
+      "clip": null,
+      "sha256": "eb3f535fc74a3372ded75cf1b623b5456bb94468572a286132bd9aa3151300c8",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-04-weekly-summary.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:22:40.538Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion에 표시된 주간보고 핵심 요약과 원문 근거",
+      "clip": null,
+      "sha256": "12b6cf98cfdbb0f5c5681da74eef62565ec806116498717249770194d51c2257",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-05-department-table.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:22:40.800Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion 부서별 업무와 다음 조치 표 전체",
+      "clip": null,
+      "sha256": "10631f26f75603f1472d897583993d64f0617388eb714e3631583dd4d37d7a77",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-06-department-detail.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:23:40.734Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 부서별 활동표 확대 캡처",
+      "clip": {
+        "x": 655,
+        "y": 90,
+        "width": 790,
+        "height": 560
+      },
+      "sha256": "63bc79826f56de7ea1d86ea2b6e3275ae275767cc229743be4a53d9aa4b64178",
+      "width": 1185,
+      "height": 840
+    },
+    {
+      "file": "notion-web-07-business-status.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:22:41.234Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion 사업별 진행 현황과 리스크 및 다음 의사결정 표",
+      "clip": null,
+      "sha256": "12bff556cf60ce658ce69eb6babaa87a7b4971c3afef9239622e7657b0a0c19b",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-08-business-decisions.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:23:40.950Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 사업별 현황표의 진행 수치와 출시 차단 조건 확대",
+      "clip": {
+        "x": 655,
+        "y": 90,
+        "width": 790,
+        "height": 590
+      },
+      "sha256": "21b6c58c83e1560a492677b10c9021004d052c6812c24822b0b5c6bb31e9e1e2",
+      "width": 1185,
+      "height": 885
+    },
+    {
+      "file": "notion-web-09-review-findings.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:22:41.590Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion 검수 결과와 분모 및 표본 구분",
+      "clip": null,
+      "sha256": "20626027998cae4617d87ccb79c5ce48a9fc6285179f91e2fc04a090efdee466",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-10-next-week.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:23:41.220Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion의 다음 주 우선순위와 원문 추적 기록",
+      "clip": null,
+      "sha256": "9b144ab7ec373386acc6443b0fb17d7263ab5524fecae6ca28e5cbd5997e1aaa",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-11-source-provenance.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:23:41.440Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion에 보관된 원문 보고서 ID와 SHA-256 및 대화 기록",
+      "clip": null,
+      "sha256": "b607101cb5f3841b9f1f03cc0f72221017edd9f8c43a8e2c446dfc3b3b43ac5b",
+      "width": 2700,
+      "height": 1500
+    },
+    {
+      "file": "notion-web-12-verification-id.png",
+      "url": "https://app.notion.com/p/1-4054587c9925805da1bfeb84deae06ab",
+      "title": "(1) 주차별 보고 자료 (1) | Notion",
+      "capturedAt": "2026-10-26T09:24:49.213Z",
+      "viewport": {
+        "width": 1800,
+        "height": 1000
+      },
+      "description": "실제 Notion의 원문 ID와 내용 해시 및 최종 연계 검증 ID 확대",
+      "clip": {
+        "x": 655,
+        "y": 205,
+        "width": 790,
+        "height": 620
+      },
+      "sha256": "b0bfebc96c663771d64055cb2017ceff6ad01048e75b2d37100720dbc9bc953f",
+      "width": 1185,
+      "height": 930
+    }
+  ],
+  "actualWebScreenshotCount": 12,
+  "documentContentModifiedDuringCapture": false,
+  "loginCompletedByUser": true,
+  "authStateExported": false
+}

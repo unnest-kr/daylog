@@ -1,0 +1,4 @@
+*.pdf binary
+*.png binary
+# Markdown hard line breaks intentionally use trailing spaces.
+*.md whitespace=-blank-at-eol
